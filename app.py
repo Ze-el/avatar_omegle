@@ -348,6 +348,11 @@ def match():
 
 socketio = SocketIO(app, cors_allowed_origins="*")
 
+import logging
+
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(levelname)s %(message)s')
+
+
 @socketio.on('connect')
 def handle_connect():
     print('Client connected')
@@ -357,10 +362,10 @@ def handle_disconnect():
     print('Client disconnected')
     # Cleanup room if necessary
     # Remove the user from active rooms if they were part of a room
-    for room_id, users in active_rooms.items():
-        if users['user1'] == session.get('user_id') or users['user2'] == session.get('user_id'):
-            del active_rooms[room_id]
-            break
+    #for room_id, users in active_rooms.items():
+     #   if users['user1'] == session.get('user_id') or users['user2'] == session.get('user_id'):
+      #      del active_rooms[room_id]
+       #     break
 
 
 
