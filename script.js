@@ -3,6 +3,7 @@ const remoteVideo = document.getElementById('remoteVideo');
 const connectButton = document.getElementById('connectButton');
 const offerTextarea = document.getElementById('offerTextarea');
 const answerTextarea = document.getElementById('answerTextarea');
+const localcanvas = document.getElementById('localcanvas');
 
 // WebSocket setup
 const socket = new WebSocket('ws://localhost:8765');
@@ -21,12 +22,7 @@ socket.onmessage = function(event) {
 
   img.onload = function () {
     // Create a canvas to draw the image on
-    const canvas = document.createElement('canvas');
-    const context = canvas.getContext('2d');
-    canvas.width = img.width;
-    canvas.height = img.height;
-    console.log(img.width)
-    console.log(img.height)
+    const context = localcanvas.getContext('2d');
 
     // Draw the image on the canvas
     context.drawImage(img, 0, 0);
@@ -34,7 +30,8 @@ socket.onmessage = function(event) {
     // Optionally, you can add further processing to manipulate the canvas
 
     // Attach the processed frame to the local video element
-      localVideo.srcObject = canvas.captureStream(); // Capture the canvas as a video stream
+    // const stream = canvas.captureStream(30);
+    // localVideo.srcObject = stream; // Capture the canvas as a video stream
   };
 };
 
