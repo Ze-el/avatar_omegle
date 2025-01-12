@@ -1,66 +1,28 @@
 <!DOCTYPE html>
-<html lang="en">
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<html>
 <head>
-    <script src="https://cdn.jsdelivr.net/npm/deepar@5.6.15/js/deepar.min.js"></script>
-    <link rel="shortcut icon" type="image/x-icon" href="favicon.ico?">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SimplePeer Video Call with Vendetta Mask</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin: 0;
-            padding: 0;
-        }
-        video {
-            width: 45%;
-            margin: 10px;
-            border: 2px solid #333;
-            border-radius: 10px;
-        }
-        textarea {
-            width: 90%;
-            height: 100px;
-            margin: 10px;
-            font-family: monospace;
-            font-size: 14px;
-        }
-        button {
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
-            background-color: #007BFF;
-            color: white;
-            border: none;
-            border-radius: 5px;
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
-    </style>
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <title>Ivy Streams</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <link rel='stylesheet' type='text/css' media='screen' href='main.css'>
 </head>
 <body>
-    <h1>SimplePeer Video Call with Vendetta Mask</h1>
-    <video id="localVideo" autoplay muted playsinline></video>
-    <video id="remoteVideo" autoplay muted playsinline></video>
-    <textarea id="offerTextarea" placeholder="Offer or Answer will appear here"></textarea>
-    <textarea id="answerTextarea" placeholder="Paste Offer or Answer here"></textarea>
-    <button id="connectButton">Connect</button>
-    <button id="playLocalButton">Play Local Video</button>
-    <button id="playRemoteButton">Play Remote Video</button>
+
+    <button id="join-btn">Join Stream</button>
+
+    <div id="stream-wrapper">
+        <div id="video-streams"></div>
+
+        <div id="stream-controls">
+            <button id="leave-btn">Leave Stream</button>
+            <button id="mic-btn">Mic On</button>
+            <button id="camera-btn">Camera on</button>
+        </div>
+    </div>
     
-    <!-- SimplePeer JS -->
-    <script src="https://cdn.jsdelivr.net/npm/simple-peer@9.11.0/simplepeer.min.js"></script>
-
-    <div id="ar-screen" style="width: 640px; height: 480px;"></div>
-
-    <!-- Uncomment and replace with actual DeepAR script URL -->
-    <!-- <script src="https://cdn.deepar.ai/deepar.js"></script> -->
-
-    <script src="script.js"></script>
 </body>
+<!-- <script src="https://download.agora.io/sdk/release/AgoraRTC_N.js"></script> -->
+<script src="AgoraRTC_N-4.7.3.js"></script>
+<script src='main.js'></script>
 </html>
