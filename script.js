@@ -28,7 +28,7 @@ async function initDeepAR(stream) {
   try {
         // Initialize DeepAR
         deepARInstance = await deepar.initialize({
-            licenseKey: "cb2d5da261a7cab1dc27d69f78aba5f9e57baca5a6c1aaa58d5c0316f20df5fa1b2210fff7b8d894", // Your DeepAR license key
+            licenseKey: "9464a613ada614ca3b1e5f2e51a408b047d5d1741cd2d6912f9a80da8021d06b9e45f7261e12ec20", // Your DeepAR license key
             previewElement, // The element that will show the AR video
             effect: effectList[0], // Initial AR effect
             rootPath: "./node_modules/deepar", // Path to DeepAR resources (optional, for custom deployment)
