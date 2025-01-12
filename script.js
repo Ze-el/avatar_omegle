@@ -6,7 +6,7 @@ const answerTextarea = document.getElementById('answerTextarea');
 const localcanvas = document.getElementById('localcanvas');
 
 // WebSocket setup
-const socket = new WebSocket('wss://localhost:8765');
+const socket = new WebSocket('wss://avatar-omegle-hni6.onrender.com/');
 
 socket.onopen = function() {
   console.log('WebSocket connection established');

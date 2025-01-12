@@ -12,10 +12,10 @@ face_mesh = mp_face_mesh.FaceMesh(min_detection_confidence=0.5, min_tracking_con
 mp_drawing = mp.solutions.drawing_utils
 
 # WebSocket server settings
-HOST = 'localhost'
+HOST = "0.0.0.0"
 PORT = 8765  # You can choose a different port if needed
 
-async def send_frames(websocket):  # Accept both websocket and path arguments
+async def send_frames(websocket, path="/"):  # Accept both websocket and path arguments
     # Initialize webcam
     cap = cv2.VideoCapture(0)
     mp_drawing_styles = mp.solutions.drawing_styles
