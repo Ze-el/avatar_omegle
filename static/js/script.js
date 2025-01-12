@@ -4,7 +4,7 @@ class VideoChat {
         this.localStream = null;
         this.localPeer = null;
         this.remotePeer = null;
-        this.socket = io.connect(); // Connect to the server
+        this.socket = io.connect({transports: ['websocket']}); // Connect to the server
     }
 
     async initialize() {

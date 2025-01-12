@@ -345,7 +345,6 @@ def match():
 
 
 
-
 socketio = SocketIO(app, cors_allowed_origins="*")
 
 import logging
