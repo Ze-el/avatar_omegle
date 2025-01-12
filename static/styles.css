@@ -202,3 +202,13 @@ button{
         width: 95%;
     }
 }
+
+
+p {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: #e0e0e0;
+    margin: 15px 0;
+    padding: 0 10px;
+    text-align: justify;
+}
