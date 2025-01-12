@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="shortcut icon" type="image/x-icon" href="favicon.ico?">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SimplePeer Video Call</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            padding: 0;
+        }
+        video {
+            width: 45%;
+            margin: 10px;
+            border: 2px solid #333;
+            border-radius: 10px;
+        }
+        textarea {
+            width: 90%;
+            height: 100px;
+            margin: 10px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>SimplePeer Video Call</h1>
+    <video id="localVideo" autoplay="" muted="" playsinline=""></video>
+    <video id="remoteVideo" autoplay="" muted="" playsinline=""></video>
+    <textarea id="offerTextarea" placeholder="Offer or Answer will appear here"></textarea>
+    <textarea id="answerTextarea" placeholder="Paste Offer or Answer here"></textarea>
+    <button id="connectButton">Connect</button>
+    <button id="playLocalButton">Play Local Video</button>
+    <button id="playRemoteButton">Play Remote Video</button>
+    <script src="https://cdn.jsdelivr.net/npm/simple-peer@9.11.0/simplepeer.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

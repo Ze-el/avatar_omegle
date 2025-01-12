@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+import dlib
 
 # Load the Haar Cascade Classifier for face detection
 face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
