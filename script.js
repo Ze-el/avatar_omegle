@@ -1,48 +1,64 @@
-// Import SimplePeer
-
-// DOM Elements
 const localVideo = document.getElementById('localVideo');
 const remoteVideo = document.getElementById('remoteVideo');
 const connectButton = document.getElementById('connectButton');
 const offerTextarea = document.getElementById('offerTextarea');
 const answerTextarea = document.getElementById('answerTextarea');
 
+// WebSocket setup
+const socket = new WebSocket('ws://localhost:8765');
+
+socket.onopen = function() {
+  console.log('WebSocket connection established');
+};
+
+socket.onmessage = function(event) {
+  const message = JSON.parse(event.data);
+  const base64Image = message.frame;
+
+  // Create an Image element to hold the base64-encoded image
+  const img = new Image();
+  img.src = 'data:image/jpeg;base64,' + base64Image;
+
+  img.onload = function () {
+    // Create a canvas to draw the image on
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    canvas.width = img.width;
+    canvas.height = img.height;
+    console.log(img.width)
+    console.log(img.height)
+
+    // Draw the image on the canvas
+    context.drawImage(img, 0, 0);
+
+    // Optionally, you can add further processing to manipulate the canvas
+
+    // Attach the processed frame to the local video element
+      localVideo.srcObject = canvas.captureStream(); // Capture the canvas as a video stream
+  };
+};
+
+// Handle WebRTC connection setup
 let peer;
 
-// Get user media
-navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-  .then(stream => {
-    // Display local video stream
-    playLocalButton.addEventListener('click', ()=>{
-      localVideo.srcObject = stream;
-      localVideo.muted = true;
-      localVideo.play();
-    });
+function handleSignal(data) {
+  // Initialize SimplePeer and handle signaling as usual
+  peer = new SimplePeer({ initiator: location.hash === '#1', trickle: false });
 
+  peer.on('signal', (data) => {
+    const signalString = JSON.stringify(data);
+    if (peer.initiator) {
+      console.log("initiator")
+      offerTextarea.value = signalString; // Show offer
+    } else {
+      answerTextarea.value = signalString; // Show answer
+    }
+  });
 
-    // Initialize SimplePeer instance
-    peer = new SimplePeer({ initiator: location.hash === '#1', trickle: false, stream });
-
-    // Handle signal data
-    peer.on('signal', data => {
-      const signalString = JSON.stringify(data);
-      if (peer.initiator) {
-        offerTextarea.value = signalString; // Show offer
-      } else {
-        answerTextarea.value = signalString; // Show answer
-      }
-    });
-
-    // Display remote stream
-    peer.on('stream', remoteStream => {
-      playRemoteButton.addEventListener('click', ()=>{
-        remoteVideo.srcObject = remoteStream;
-        remoteVideo.muted = true;
-        remoteVideo.play();
-      })
-    });
-  })
-  .catch(err => console.error('Error accessing media devices:', err));
+  peer.on('stream', (remoteStream) => {
+    remoteVideo.srcObject = remoteStream;
+  });
+}
 
 // Handle connection button click
 connectButton.addEventListener('click', () => {
