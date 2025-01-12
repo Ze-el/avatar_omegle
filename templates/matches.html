@@ -34,6 +34,11 @@
             <p class="text-gray-500 mt-2">Please try again later or update your interests.</p>
         </div>
     {% endif %}
-
+    <div class="text-center mt-6">
+        <a href="{{ url_for('index') }}" 
+           class="inline-block px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+            Back to Home
+        </a>
+    </div>
 
 {% endblock %}
