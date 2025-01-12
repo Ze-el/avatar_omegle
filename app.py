@@ -321,10 +321,7 @@ def match():
                 }
                 
                 # Emit socket event for match found
-                socketio.emit('match_found', {
-                    'room_id': room_id,
-                    'user_id': user_id
-                }, room=room_id)
+                
                 
                 cursor.close()
                 connection.close()
@@ -345,61 +342,11 @@ def match():
 
 
 
-socketio = SocketIO(app, cors_allowed_origins="*")
-
-import logging
-
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(levelname)s %(message)s')
-
-
-@socketio.on('connect')
-def handle_connect():
-    print('Client connected')
-
-@socketio.on('disconnect')
-def handle_disconnect():
-    print('Client disconnected')
-    # Cleanup room if necessary
-    # Remove the user from active rooms if they were part of a room
-    #for room_id, users in active_rooms.items():
-     #   if users['user1'] == session.get('user_id') or users['user2'] == session.get('user_id'):
-      #      del active_rooms[room_id]
-       #     break
-
-
-
-@socketio.on('join')
-def on_join(data):
-    room_id = data.get('room_id')  # Extract room_id from the dictionary
-    
-    if isinstance(room_id, str):
-        print(f'Client joining room: {room_id}')
-        join_room(room_id)
-        emit('user_joined', {'room_id': room_id}, to=room_id)
-    else:
-        print(f"Invalid room_id: {room_id}. It should be a string.")
-
-
-
-#ADDED
-@socketio.on('offer')
-def on_offer(data):
-    print(f"Offer received for room: {data['room_id']}")
-    emit('offer', data, room=data['room_id'])
-
-@socketio.on('answer')
-def on_answer(data):
-    print(f"Answer received for room: {data['room_id']}")
-    emit('answer', data, room=data['room_id'])
-
-
-@socketio.on('ice-candidate')
-def on_ice_candidate(data):
-    emit('ice-candidate', data, room=data['room_id'])
 
 
 
 if __name__ == '__main__':
     # Check if running in development environment
-    socketio.run(app, host='0.0.0.0', port=4000)
+    create_database_and_tables()
+    app.run(host='0.0.0.0', port=5501)
    

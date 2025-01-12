@@ -1,143 +1,39 @@
 {% extends "base.html" %}
-
 {% block content %}
-<div class="container mx-auto p-4">
-    <h1 class="text-3xl font-bold mb-6 text-center">SimplePeer Video Call</h1>
-
-    {% if match %}
+{% if match %}
         <div class="bg-white rounded-lg shadow p-6 mb-6">
             <h2 class="text-xl font-semibold">{{ match.username }}</h2>
             <p class="text-gray-600">Email: {{ match.email }}</p>
             <p class="text-gray-600">Interests: {{ match.interests }}</p>
         </div>
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <title>Ivy Streams</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
 
-        <!-- Video chat container -->
-        <div class="video-chat-container flex flex-col md:flex-row gap-4 mb-6">
-            <div class="local-video-container bg-gray-100 rounded-lg p-4">
-                <h3 class="text-lg font-medium mb-2">Your Video</h3>
-                <video 
-                    id="localVideo" 
-                    class="w-full h-64 md:h-80 rounded-lg object-cover bg-black" 
-                    autoplay 
-                    muted 
-                    playsinline
-                    style="transform: scaleX(-1);"  
-                ></video>
-            </div>
-            <div class="remote-video-container bg-gray-100 rounded-lg p-4">
-                <h3 class="text-lg font-medium mb-2">{{ match.username }}'s Video</h3>
-                <video 
-                    id="remoteVideo" 
-                    class="w-full h-64 md:h-80 rounded-lg object-cover bg-black" 
-                    autoplay 
-                    playsinline
-                ></video>
-            </div>
+
+    <button id="join-btn">Join Stream</button>
+
+    <div id="stream-wrapper">
+        <div id="video-streams"></div>
+
+        <div id="stream-controls">
+            <button id="leave-btn">Leave Stream</button>
+            <button id="mic-btn">Mic On</button>
+            <button id="camera-btn">Camera on</button>
         </div>
+    </div>
+    
 
-        <!-- Status and control -->
-        <div class="connection-status mt-4 text-center">
-            <p id="connectionStatus" class="text-gray-600">Establishing connection...</p>
-        </div>
-
-        <div class="control-buttons flex justify-center gap-4 mt-4">
-            <button id="connectButton" class="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
-                Connect
-            </button>
-            <button id="playLocalButton" class="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors">
-                Play Local Video
-            </button>
-            <button id="playRemoteButton" class="px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors">
-                Play Remote Video
-            </button>
-        </div>
-
-        <!-- Hidden text areas for signaling -->
-        <div class="signaling-area mt-6 text-center">
-            <textarea id="offerTextarea" placeholder="Offer will appear here" class="w-11/12 h-24 md:w-9/12"></textarea>
-            <textarea id="answerTextarea" placeholder="Paste Offer or Answer here" class="w-11/12 h-24 md:w-9/12"></textarea>
-        </div>
-
-        <!-- Scripts -->
-        <script src="https://cdn.jsdelivr.net/npm/socket.io-client@4/dist/socket.io.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/simple-peer@9/simplepeer.min.js"></script>
-        <script src="{{ url_for('static', filename='js/script.js') }}"></script>
-        <script>
-            document.addEventListener('DOMContentLoaded', () => {
-                const room_id = "{{ room_id }}";
-                if (!room_id) {
-                    console.error('Room ID is not defined');
-                    document.getElementById('connectionStatus').textContent = 'Error: Room ID not found';
-                    return;
-                }
-
-                const videoChat = new VideoChat(room_id);
-
-                videoChat.initialize().catch(err => {
-                    console.error('Failed to initialize video chat:', err);
-                    document.getElementById('connectionStatus').textContent = 
-                        'Failed to access camera/microphone. Please check your permissions.';
-                });
-
-                videoChat.onConnectionStateChange = (state) => {
-                    const statusElement = document.getElementById('connectionStatus');
-                    switch(state) {
-                        case 'connecting':
-                            statusElement.textContent = 'Connecting to peer...';
-                            statusElement.className = 'text-blue-600';
-                            break;
-                        case 'connected':
-                            statusElement.textContent = 'Connected!';
-                            statusElement.className = 'text-green-600';
-                            break;
-                        case 'disconnected':
-                            statusElement.textContent = 'Disconnected';
-                            statusElement.className = 'text-red-600';
-                            break;
-                        case 'failed':
-                            statusElement.textContent = 'Connection failed. Please refresh the page to try again.';
-                            statusElement.className = 'text-red-600';
-                            break;
-                    }
-                };
-
-                window.addEventListener('beforeunload', () => {
-                    videoChat.cleanup();
-                });
-            });
-        </script>
-    {% else %}
+<!-- <script src="https://download.agora.io/sdk/release/AgoraRTC_N.js"></script> -->
+<script src="/static/js/AgoraRTC_N-4.7.3.js"></script>
+<script src="/static/js/script.js"></script>
+{% else %}
         <div class="text-center py-8">
             <p class="text-gray-600 text-lg">No matches found based on your interests.</p>
             <p class="text-gray-500 mt-2">Please try again later or update your interests.</p>
         </div>
     {% endif %}
 
-    <div class="text-center mt-6">
-        <a href="{{ url_for('index') }}" 
-           class="inline-block px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
-            Back to Home
-        </a>
-    </div>
-</div>
 
-<style>
-    .video-chat-container video {
-        background-color: #000;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-
-    .video-chat-container video:not([srcObject]) {
-        background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>');
-        background-repeat: no-repeat;
-        background-position: center;
-        background-size: 48px;
-    }
-
-    textarea {
-        font-family: monospace;
-        font-size: 14px;
-        margin-top: 10px;
-    }
-</style>
 {% endblock %}

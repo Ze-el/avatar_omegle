@@ -1,130 +1,103 @@
-class VideoChat {
-    constructor(room_id) {
-        this.room_id = room_id;
-        this.localStream = null;
-        this.localPeer = null;
-        this.remotePeer = null;
-        this.socket = io.connect({ transports: ['websocket'] }); // Connect to the server
-        this.localVideo = document.getElementById('localVideo');
-        this.remoteVideo = document.getElementById('remoteVideo');
-        this.offerTextarea = document.getElementById('offerTextarea');
-        this.answerTextarea = document.getElementById('answerTextarea');
-        this.connectButton = document.getElementById('connectButton');
+const APP_ID = "ed9f2e5c93504c12a0c72ce9c6fb7376"
+const TOKEN = "007eJxTYMgpP7vhsyyTbOzbi5MvtOX6Vrf2Bn5+4cC/4UrMvKR2wXcKDKkplmlGqabJlsamBibJhkaJBsnmRsmplslmaUnmxuZmdZea0xsCGRnaNiawMjJAIIjPx1CclJGYnF2sm1iWWJJYxMAAACndJQs="
+const CHANNEL = "sbhacks-avatar"
+
+const client = AgoraRTC.createClient({mode:'rtc', codec:'vp8'})
+
+let localTracks = []
+let remoteUsers = {}
+
+let joinAndDisplayLocalStream = async () => {
+
+    client.on('user-published', handleUserJoined)
+    
+    client.on('user-left', handleUserLeft)
+    
+    let UID = await client.join(APP_ID, CHANNEL, TOKEN, null)
+
+    localTracks = await AgoraRTC.createMicrophoneAndCameraTracks() 
+
+    let player = `<div class="video-container" id="user-container-${UID}">
+                        <div class="video-player" id="user-${UID}"></div>
+                  </div>`
+    document.getElementById('video-streams').insertAdjacentHTML('beforeend', player)
+
+    localTracks[1].play(`user-${UID}`)
+    
+    await client.publish([localTracks[0], localTracks[1]])
+}
+
+let joinStream = async () => {
+    await joinAndDisplayLocalStream()
+    document.getElementById('join-btn').style.display = 'none'
+    document.getElementById('stream-controls').style.display = 'flex'
+}
+
+let handleUserJoined = async (user, mediaType) => {
+    remoteUsers[user.uid] = user 
+    await client.subscribe(user, mediaType)
+
+    if (mediaType === 'video'){
+        let player = document.getElementById(`user-container-${user.uid}`)
+        if (player != null){
+            player.remove()
+        }
+
+        player = `<div class="video-container" id="user-container-${user.uid}">
+                        <div class="video-player" id="user-${user.uid}"></div> 
+                 </div>`
+        document.getElementById('video-streams').insertAdjacentHTML('beforeend', player)
+
+        user.videoTrack.play(`user-${user.uid}`)
     }
 
-    async initialize() {
-        const room_id = this.room_id;
-        if (!room_id) {
-            console.error('Room ID is not defined');
-            return;
-        }
-
-        this.localStream = await this.setupLocalMedia();
-        
-        // Initialize local peer
-        this.localPeer = new SimplePeer({
-            initiator: true,  // Initiator sets up the offer
-            trickle: false,   // Disable trickling ICE candidates
-            stream: this.localStream
-        });
-
-        // Initialize remote peer (waiting for offer)
-        this.remotePeer = new SimplePeer({
-            initiator: false,  // Remote peer will respond to the offer
-            trickle: false
-        });
-
-        // Handle signaling for local and remote peers
-        this.localPeer.on('signal', data => {
-            const signalString = JSON.stringify(data);
-            this.offerTextarea.value = signalString;  // Show offer
-            this.socket.emit('offer', { room_id, offer: data });
-        });
-
-        this.remotePeer.on('signal', data => {
-            const signalString = JSON.stringify(data);
-            this.answerTextarea.value = signalString;  // Show answer
-            this.socket.emit('answer', { room_id, answer: data });
-        });
-
-        // Display local stream in the video element
-        this.localPeer.on('stream', stream => {
-            this.localVideo.srcObject = stream;
-            this.localVideo.muted = true;  // Mute local video
-            this.localVideo.play();
-        });
-
-        // Display remote stream when received
-        this.remotePeer.on('stream', stream => {
-            this.remoteVideo.srcObject = stream;
-            this.remoteVideo.muted = true;  // Mute remote video
-            this.remoteVideo.play();
-        });
-
-        // Handle ICE candidates for connection
-        this.localPeer.on('icecandidate', candidate => {
-            this.socket.emit('ice-candidate', { room_id, candidate });
-        });
-
-        this.remotePeer.on('icecandidate', candidate => {
-            this.socket.emit('ice-candidate', { room_id, candidate });
-        });
-
-        // Join the room
-        this.socket.emit('join', { room_id });
-
-        // Handle server signaling messages
-        this.socket.on('offer', data => {
-            if (this.localPeer) {
-                this.remotePeer.signal(data.offer);
-            }
-        });
-
-        this.socket.on('answer', data => {
-            if (this.localPeer) {
-                this.localPeer.signal(data.answer);
-            }
-        });
-
-        this.socket.on('ice-candidate', data => {
-            if (data.candidate) {
-                this.remotePeer.addIceCandidate(new RTCIceCandidate(data.candidate));
-            }
-        });
-
-        // Handle connect button click for peer connection
-        this.connectButton.addEventListener('click', () => {
-            const signalData = this.localPeer.initiator ? this.answerTextarea.value : this.offerTextarea.value;
-            try {
-                this.localPeer.signal(JSON.parse(signalData));
-            } catch (err) {
-                console.error('Invalid signal data:', err);
-            }
-        });
-    }
-
-    async setupLocalMedia() {
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-            return stream;
-        } catch (err) {
-            console.error('Error accessing media devices:', err);
-            throw new Error('Unable to access camera or microphone');
-        }
-    }
-
-    cleanup() {
-        if (this.localStream) {
-            this.localStream.getTracks().forEach(track => track.stop());
-        }
-
-        if (this.localPeer) {
-            this.localPeer.destroy();
-        }
-
-        if (this.remotePeer) {
-            this.remotePeer.destroy();
-        }
+    if (mediaType === 'audio'){
+        user.audioTrack.play()
     }
 }
 
+let handleUserLeft = async (user) => {
+    delete remoteUsers[user.uid]
+    document.getElementById(`user-container-${user.uid}`).remove()
+}
+
+let leaveAndRemoveLocalStream = async () => {
+    for(let i = 0; localTracks.length > i; i++){
+        localTracks[i].stop()
+        localTracks[i].close()
+    }
+
+    await client.leave()
+    document.getElementById('join-btn').style.display = 'block'
+    document.getElementById('stream-controls').style.display = 'none'
+    document.getElementById('video-streams').innerHTML = ''
+}
+
+let toggleMic = async (e) => {
+    if (localTracks[0].muted){
+        await localTracks[0].setMuted(false)
+        e.target.innerText = 'Mic on'
+        e.target.style.backgroundColor = 'cadetblue'
+    }else{
+        await localTracks[0].setMuted(true)
+        e.target.innerText = 'Mic off'
+        e.target.style.backgroundColor = '#EE4B2B'
+    }
+}
+
+let toggleCamera = async (e) => {
+    if(localTracks[1].muted){
+        await localTracks[1].setMuted(false)
+        e.target.innerText = 'Camera on'
+        e.target.style.backgroundColor = 'cadetblue'
+    }else{
+        await localTracks[1].setMuted(true)
+        e.target.innerText = 'Camera off'
+        e.target.style.backgroundColor = '#EE4B2B'
+    }
+}
+
+document.getElementById('join-btn').addEventListener('click', joinStream)
+document.getElementById('leave-btn').addEventListener('click', leaveAndRemoveLocalStream)
+document.getElementById('mic-btn').addEventListener('click', toggleMic)
+document.getElementById('camera-btn').addEventListener('click', toggleCamera)
