@@ -3,10 +3,11 @@ import mysql.connector
 import requests
 import os
 from dotenv import load_dotenv
+from flask_socketio import SocketIO, emit, join_room, leave_room
 
 # Load environment variables from .env file (replace 'path/to/.env' with your actual path)
 load_dotenv()
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static')
 app.config.from_object('config.Config')
 
 # Set up a secret key for session management
@@ -147,95 +148,6 @@ def profile():
 
 
 
-
-
-
-@app.route('/match')
-def match():
-    if 'user_id' not in session:
-        flash('You must be logged in to view matches!')
-        return redirect(url_for('index'))
-
-    user_id = session['user_id']
-
-    # Fetch the logged-in user's interests
-    connection = get_db_connection()
-    cursor = connection.cursor(dictionary=True)
-    cursor.execute(f"USE {app.config['MYSQL_DATABASE']}")
-    cursor.execute("SELECT interests FROM users WHERE id = %s", (user_id,))
-    user = cursor.fetchone()
-    cursor.close()
-    connection.close()
-
-    if not user:
-        flash('User not found. Please log in again.')
-        return redirect(url_for('logout'))
-
-    user_interests = user['interests']
-
-    
-    api_key = os.getenv('API_KEY')  # Replace with your Gemini API key
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key={api_key}"
-
-    
-
-    # Find matches based on refined interests
-    connection = get_db_connection()
-    cursor = connection.cursor(dictionary=True)
-    cursor.execute(f"USE {app.config['MYSQL_DATABASE']}")
-
-    try:
-        cursor.execute("SELECT * FROM users WHERE id != %s", (user_id,))
-        potential_matches = cursor.fetchall()  # Fetch all results
-    except Exception as e:
-        cursor.close()
-        connection.close()
-        flash(f"Error fetching matches: {e}")
-        return redirect(url_for('index'))
-
-    if not potential_matches:
-        cursor.close()
-        connection.close()
-        flash("No matches found.")
-        return render_template('matches.html' )
-
-    for potential_match in potential_matches:
-        print (potential_match)
-        match_suggestions = {
-            "contents": [
-                {
-                    "parts": [
-                        {"text": f"User A's interests: {user_interests}\nUser B's interests: {potential_match['interests']}\nDetermine if User A and User B should match based on interests."}
-                    ]
-                }
-            ],
-            "systemInstruction": {
-                "role": "system",
-                "parts": [
-                    {"text": "Analyze whether these two sets of interests are compatible and return Yes or No. Just return Yes or No."}
-                ]
-            }
-        }
-
-        match_response = requests.post(url, headers={'Content-Type': 'application/json'}, json=match_suggestions)
-        match_result = match_response.json()['candidates'][0]['content']['parts'][0]['text']
-        match_result = match_result.strip()
-        print (match_result)
-        if match_result=="Yes":
-            cursor.close()
-            connection.close()
-            print("hey")
-            return render_template('matches.html', match=potential_match)
-            
-       
-    cursor.close()
-    connection.close()
-
-    # No matches found
-    flash("No matches found based on your interests.")
-    return render_template('matches.html' )
-
-
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -316,6 +228,172 @@ def signup():
 
     return render_template('signup.html')
 
+
+
+
+active_rooms = {}
+user_matches = {}
+
+
+
+@app.route('/match')
+def match():
+    if 'user_id' not in session:
+        flash('You must be logged in to view matches!')
+        return redirect(url_for('index'))
+
+    user_id = session['user_id']
+
+    # Fetch the logged-in user's interests
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+    cursor.execute(f"USE {app.config['MYSQL_DATABASE']}")
+    cursor.execute("SELECT interests FROM users WHERE id = %s", (user_id,))
+    user = cursor.fetchone()
+    cursor.close()
+    connection.close()
+
+    if not user:
+        flash('User not found. Please log in again.')
+        return redirect(url_for('logout'))
+
+    user_interests = user['interests']
+    
+    api_key = os.getenv('API_KEY')
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key={api_key}"
+
+    # Find matches based on refined interests
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+    cursor.execute(f"USE {app.config['MYSQL_DATABASE']}")
+
+    try:
+        cursor.execute("SELECT * FROM users WHERE id != %s", (user_id,))
+        potential_matches = cursor.fetchall()
+    except Exception as e:
+        cursor.close()
+        connection.close()
+        flash(f"Error fetching matches: {e}")
+        return redirect(url_for('index'))
+
+    if not potential_matches:
+        cursor.close()
+        connection.close()
+        flash("No matches found.")
+        return render_template('matches.html', match=None)
+
+    for potential_match in potential_matches:
+        match_suggestions = {
+            "contents": [
+                {
+                    "parts": [
+                        {"text": f"User A's interests: {user_interests}\nUser B's interests: {potential_match['interests']}\nDetermine if User A and User B should match based on interests."}
+                    ]
+                }
+            ],
+            "systemInstruction": {
+                "role": "system",
+                "parts": [
+                    {"text": "Analyze whether these two sets of interests are compatible and return Yes or No. Just return Yes or No."}
+                ]
+            }
+        }
+
+        try:
+            match_response = requests.post(url, headers={'Content-Type': 'application/json'}, json=match_suggestions)
+            match_result = match_response.json()['candidates'][0]['content']['parts'][0]['text'].strip()
+            
+            if match_result == "Yes":
+                # Create a unique room ID using user IDs
+                room_id = f"room_{min(user_id, potential_match['id'])}_{max(user_id, potential_match['id'])}"
+
+                
+                # Store room information
+                active_rooms[room_id] = {
+                    'user1': min(user_id, potential_match['id']),
+                    'user2': max(user_id, potential_match['id'])
+                }
+                
+                # Store match information
+                user_matches[user_id] = {
+                    'match': potential_match,
+                    'room_id': room_id
+                }
+                
+                # Emit socket event for match found
+                socketio.emit('match_found', {
+                    'room_id': room_id,
+                    'user_id': user_id
+                }, room=room_id)
+                
+                cursor.close()
+                connection.close()
+                
+                return render_template('matches.html', 
+                                     match=potential_match,
+                                     room_id=room_id)
+                
+        except Exception as e:
+            print(f"Error processing match: {e}")
+            continue
+
+    cursor.close()
+    connection.close()
+    flash("No matches found based on your interests.")
+    return render_template('matches.html', match=None)
+
+
+
+
+
+socketio = SocketIO(app, cors_allowed_origins="*")
+
+@socketio.on('connect')
+def handle_connect():
+    print('Client connected')
+
+@socketio.on('disconnect')
+def handle_disconnect():
+    print('Client disconnected')
+    # Cleanup room if necessary
+    # Remove the user from active rooms if they were part of a room
+    for room_id, users in active_rooms.items():
+        if users['user1'] == session.get('user_id') or users['user2'] == session.get('user_id'):
+            del active_rooms[room_id]
+            break
+
+
+
+@socketio.on('join')
+def on_join(data):
+    room_id = data.get('room_id')  # Extract room_id from the dictionary
+    
+    if isinstance(room_id, str):
+        print(f'Client joining room: {room_id}')
+        join_room(room_id)
+        emit('user_joined', {'room_id': room_id}, to=room_id)
+    else:
+        print(f"Invalid room_id: {room_id}. It should be a string.")
+
+
+
+#ADDED
+@socketio.on('offer')
+def on_offer(data):
+    print(f"Offer received for room: {data['room_id']}")
+    emit('offer', data, room=data['room_id'])
+
+@socketio.on('answer')
+def on_answer(data):
+    print(f"Answer received for room: {data['room_id']}")
+    emit('answer', data, room=data['room_id'])
+
+
+@socketio.on('ice-candidate')
+def on_ice_candidate(data):
+    emit('ice-candidate', data, room=data['room_id'])
+
+
+
 if __name__ == '__main__':
-    create_database_and_tables()
-    app.run(debug=True)
+    socketio.run(app, debug=True)
