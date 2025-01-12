@@ -1,5 +1,4 @@
 // import * as SimplePeer from 'simple-peer';
-import * as deepar from 'deepar';
 // from "./quickstart-web-js-npm/node_modules/deepar" import * as deepar;
 
 //const deepar = require('deepar');
@@ -29,10 +28,10 @@ async function initDeepAR(stream) {
   try {
         // Initialize DeepAR
         deepARInstance = await deepar.initialize({
-            licenseKey: "0ee764525748b902349ccde3c9970f5c1fed1300eae370ee310597a0aec39cd4c6569049a9481f6a", // Your DeepAR license key
+            licenseKey: "cb2d5da261a7cab1dc27d69f78aba5f9e57baca5a6c1aaa58d5c0316f20df5fa1b2210fff7b8d894", // Your DeepAR license key
             previewElement, // The element that will show the AR video
             effect: effectList[0], // Initial AR effect
-            rootPath: "./deepar-resources", // Path to DeepAR resources (optional, for custom deployment)
+            rootPath: "./node_modules/deepar", // Path to DeepAR resources (optional, for custom deployment)
             additionalOptions: {
                 cameraConfig: {
                     // You can configure the camera, e.g., facingMode: 'environment' for rear camera
