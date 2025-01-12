@@ -7,6 +7,7 @@ body {
     margin: 0;
     padding: 0;
     background-size: 400% 400%;
+    font-size: 1.5rem;
     animation: gradientBackground 15s ease infinite;
 }
 
@@ -213,11 +214,3 @@ button{
 }
 
 
-p {
-    font-size: 1.5rem;
-    line-height: 1.6;
-    color: #e0e0e0;
-    margin: 15px 0;
-    padding: 0 10px;
-    text-align: justify;
-}
