@@ -16,7 +16,7 @@ let peer;
 let deepARInstance = null;
 
 // Initialize DeepAR if available
-async function initDeepAR(stream) {
+function initDeepAR(stream) {
   const previewElement = document.getElementById('ar-screen'); // Set the element where AR will be displayed
 
   const effectList = [
@@ -27,7 +27,7 @@ async function initDeepAR(stream) {
 
   try {
         // Initialize DeepAR
-        deepARInstance = await deepar.initialize({
+        deepARInstance = new deepar({
             licenseKey: "9464a613ada614ca3b1e5f2e51a408b047d5d1741cd2d6912f9a80da8021d06b9e45f7261e12ec20", // Your DeepAR license key
             previewElement, // The element that will show the AR video
             effect: effectList[0], // Initial AR effect
