@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script src="https://cdn.deepar.ai/deepar.min.js"></script>
     <link rel="shortcut icon" type="image/x-icon" href="favicon.ico?">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SimplePeer Video Call</title>
+    <title>SimplePeer Video Call with Vendetta Mask</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -42,15 +43,21 @@
     </style>
 </head>
 <body>
-    <h1>SimplePeer Video Call</h1>
-    <video id="localVideo" autoplay="" muted="" playsinline=""></video>
-    <video id="remoteVideo" autoplay="" muted="" playsinline=""></video>
+    <h1>SimplePeer Video Call with Vendetta Mask</h1>
+    <video id="localVideo" autoplay muted playsinline></video>
+    <video id="remoteVideo" autoplay muted playsinline></video>
     <textarea id="offerTextarea" placeholder="Offer or Answer will appear here"></textarea>
     <textarea id="answerTextarea" placeholder="Paste Offer or Answer here"></textarea>
     <button id="connectButton">Connect</button>
     <button id="playLocalButton">Play Local Video</button>
     <button id="playRemoteButton">Play Remote Video</button>
+    
+    <!-- SimplePeer JS -->
     <script src="https://cdn.jsdelivr.net/npm/simple-peer@9.11.0/simplepeer.min.js"></script>
+
+    <!-- Uncomment and replace with actual DeepAR script URL -->
+    <!-- <script src="https://cdn.deepar.ai/deepar.js"></script> -->
+
     <script src="script.js"></script>
 </body>
 </html>

@@ -1,4 +1,8 @@
-// Import SimplePeer
+// import * as SimplePeer from 'simple-peer';
+import * as deepar from 'deepar';
+// from "./quickstart-web-js-npm/node_modules/deepar" import * as deepar;
+
+//const deepar = require('deepar');
 
 // DOM Elements
 const localVideo = document.getElementById('localVideo');
@@ -6,19 +10,61 @@ const remoteVideo = document.getElementById('remoteVideo');
 const connectButton = document.getElementById('connectButton');
 const offerTextarea = document.getElementById('offerTextarea');
 const answerTextarea = document.getElementById('answerTextarea');
+const playLocalButton = document.getElementById('playLocalButton');
+const playRemoteButton = document.getElementById('playRemoteButton');
 
 let peer;
+let deepARInstance = null;
+
+// Initialize DeepAR if available
+async function initDeepAR(stream) {
+  const previewElement = document.getElementById('ar-screen'); // Set the element where AR will be displayed
+
+  const effectList = [
+      "effects/Vendetta_Mask.deepar", // Add more effects here if needed
+  ];
+
+  let deepARInstance = null;
+
+  try {
+        // Initialize DeepAR
+        deepARInstance = await deepar.initialize({
+            licenseKey: "0ee764525748b902349ccde3c9970f5c1fed1300eae370ee310597a0aec39cd4c6569049a9481f6a", // Your DeepAR license key
+            previewElement, // The element that will show the AR video
+            effect: effectList[0], // Initial AR effect
+            rootPath: "./deepar-resources", // Path to DeepAR resources (optional, for custom deployment)
+            additionalOptions: {
+                cameraConfig: {
+                    // You can configure the camera, e.g., facingMode: 'environment' for rear camera
+                },
+            },
+        });
+
+        // If initialization is successful, the AR effect will start
+        console.log("DeepAR initialized successfully");
+        document.getElementById('ar-screen').style.display = "block"; // Show the AR screen
+
+        deepARInstance.startARFromStream(stream);
+        console.log('DeepAR AR stream started with user media stream.');
+
+    } catch (error) {
+        console.error("Error initializing DeepAR:", error);
+        document.getElementById("permission-denied-screen").style.display = "block"; // Show error screen
+    }
+}
 
 // Get user media
 navigator.mediaDevices.getUserMedia({ video: true, audio: true })
   .then(stream => {
     // Display local video stream
-    playLocalButton.addEventListener('click', ()=>{
+    playLocalButton.addEventListener('click', () => {
       localVideo.srcObject = stream;
       localVideo.muted = true;
       localVideo.play();
-    });
 
+      // Initialize DeepAR after local video starts
+      initDeepAR(stream);
+    });
 
     // Initialize SimplePeer instance
     peer = new SimplePeer({ initiator: location.hash === '#1', trickle: false, stream });
@@ -35,11 +81,11 @@ navigator.mediaDevices.getUserMedia({ video: true, audio: true })
 
     // Display remote stream
     peer.on('stream', remoteStream => {
-      playRemoteButton.addEventListener('click', ()=>{
+      playRemoteButton.addEventListener('click', () => {
         remoteVideo.srcObject = remoteStream;
         remoteVideo.muted = true;
         remoteVideo.play();
-      })
+      });
     });
   })
   .catch(err => console.error('Error accessing media devices:', err));
