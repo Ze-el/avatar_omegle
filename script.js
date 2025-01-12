@@ -38,12 +38,12 @@ socket.onmessage = function(event) {
 // Handle WebRTC connection setup
 let peer;
 
-function handleSignal(data) {
   // Initialize SimplePeer and handle signaling as usual
   peer = new SimplePeer({ initiator: location.hash === '#1', trickle: false });
 
   peer.on('signal', (data) => {
     const signalString = JSON.stringify(data);
+    console.log("breakpoint1")
     if (peer.initiator) {
       console.log("initiator")
       offerTextarea.value = signalString; // Show offer
@@ -54,8 +54,9 @@ function handleSignal(data) {
 
   peer.on('stream', (remoteStream) => {
     remoteVideo.srcObject = remoteStream;
+    remoteVideo.muted = true;
+    remoteVideo.play();
   });
-}
 
 // Handle connection button click
 connectButton.addEventListener('click', () => {
